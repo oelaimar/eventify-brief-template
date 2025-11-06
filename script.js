@@ -7,7 +7,7 @@ const headerSubTitle = document.getElementById("page-subtitle");
 // DATA MANAGEMENT
 // ============================================
 
-//titles and subtitles of the headew
+//titles and subtitles of the header
 const headerTitles = {
     stats: {
         title: "Statistics",
@@ -34,15 +34,42 @@ const headerTitles = {
 let events = [];
 let archive = [];
 
+// data to test
+events = [{ name: "Concert", seats: 2, price: 1000 },
+          { name: "Sports", seats: 2, price: 20 }];
+
+archive = [{ name: "serce", seats: 13, price: 20 },
+          { name: "Sports", seats: 14, price: 10 }];
+saveData();
+
+
+
 // Save/load from localStorage
 function loadData() {
     // TODO: Load events and archive from localStorage
-    // JSON.parse(localStorage.getItem('events'))
+    const savedEvents = localStorage.getItem("events");
+    const savedArchive = localStorage.getItem("archive");
+
+    try {
+        // JSON.parse(localStorage.getItem('events'))
+        events = savedEvents ? JSON.parse(savedEvents) : [];
+        archive = savedArchive ? JSON.parse(savedArchive) : [];
+    } catch (error) {
+        console.error("error loading data",);
+        events = [];
+        archive = [];
+    }
 }
 
 function saveData() {
     // TODO: Save events and archive to localStorage
     // localStorage.setItem('events', JSON.stringify(events))
+    try {
+        localStorage.setItem("events", JSON.stringify(events));
+        localStorage.setItem("archive", JSON.stringify(archive));
+    } catch (error) {
+        console.error("error saving data");
+    }
 }
 
 // ============================================
@@ -81,6 +108,11 @@ btnsStepers.forEach(btn => {
 // STATISTICS SCREEN
 // ============================================
 
+//turn number to a commas for thousands
+function turnNumberWithCommas(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function renderStats() {
     // TODO:
     // Calculate from events array:
@@ -89,9 +121,13 @@ function renderStats() {
     const totalPrice = events.reduce((sum, e) => sum + e.price * e.seats, 0);
 
     // Update DOM:
-    document.getElementById('stat-total-events').textContent = totalEvents;
-    document.getElementById('stat-total-seats').textContent = totalSeats;
-    document.getElementById('stat-total-price').textContent = '$' + totalPrice.toFixed(2);
+    try {
+        document.getElementById('stat-total-events').textContent = turnNumberWithCommas(totalEvents);
+        document.getElementById('stat-total-seats').textContent = turnNumberWithCommas(totalSeats);
+        document.getElementById('stat-total-price').textContent = '$' + turnNumberWithCommas(totalPrice.toFixed(2));
+    } catch (error) {
+        console.error("error to update the statistic data");
+    }
 }
 
 // ============================================
@@ -254,10 +290,12 @@ function sortEvents(eventList, sortType) {
 function init() {
     // TODO:
     // 1. Load data from localStorage
+    loadData();
     // 2. Render initial screen (statistics)
     // 3. Set up all event listeners
     // 4. Call renderStats(), renderEventsTable(), renderArchiveTable()
+    renderStats();
 }
 
 // Call on page load
-// document.addEventListener('DOMContentLoaded', init)
+document.addEventListener('DOMContentLoaded', init)
