@@ -1,6 +1,34 @@
+const btnsStepers = document.querySelectorAll(".sidebar__btn");
+const screens = document.querySelectorAll(".screen");
+const headerTitle = document.getElementById("page-title");
+const headerSubTitle = document.getElementById("page-subtitle");
+
 // ============================================
 // DATA MANAGEMENT
 // ============================================
+
+//titles and subtitles of the headew
+const headerTitles = {
+    stats: {
+        title: "Statistics",
+        subTitle: "Overview of your events"
+    },
+
+    add: {
+        title: "Add Event",
+        subTitle: "Create and schedule a new event"
+    },
+
+    list: {
+        title: "Events",
+        subTitle: "Manage your upcoming and active events"
+    },
+
+    archive: {
+        title: "Archive",
+        subTitle: "View your past and completed events"
+    }
+}
 
 // Your app's data structure
 let events = [];
@@ -24,16 +52,30 @@ function saveData() {
 function switchScreen(screenId) {
     // TODO:
     // 1. Remove .is-active from all .sidebar__btn
-    // 2. Add .is-active to [data-screen="${screenId}"]
+    for (const btn of btnsStepers) {
+        btn.classList.remove("is-active");
+        // 2. Add .is-active to [data-screen="${screenId}"]
+        if (btn.dataset.screen == `${screenId}`) {
+            btn.classList.add("is-active");
+        }
+    }
     // 3. Remove .is-visible from all .screen
-    // 4. Add .is-visible to [data-screen="${screenId}"]
+    for (const screen of screens) {
+        screen.classList.remove("is-visible");
+        // 4. Add .is-visible to [data-screen="${screenId}"]
+        if (screen.dataset.screen == `${screenId}`) {
+            screen.classList.add("is-visible");
+        }
+    }
     // 5. Update #page-title and #page-subtitle based on screenId
+    headerTitle.textContent = headerTitles[screenId].title;
+    headerSubTitle.textContent = headerTitles[screenId].subTitle;
 }
 
 // Listen to sidebar button clicks
-// document.querySelectorAll('.sidebar__btn').forEach(btn => {
-//     btn.addEventListener('click', () => switchScreen(btn.dataset.screen))
-// })
+btnsStepers.forEach(btn => {
+    btn.addEventListener('click', () => switchScreen(btn.dataset.screen))
+})
 
 // ============================================
 // STATISTICS SCREEN
@@ -45,7 +87,7 @@ function renderStats() {
     const totalEvents = events.length;
     const totalSeats = events.reduce((sum, e) => sum + e.seats, 0);
     const totalPrice = events.reduce((sum, e) => sum + e.price * e.seats, 0);
-    
+
     // Update DOM:
     document.getElementById('stat-total-events').textContent = totalEvents;
     document.getElementById('stat-total-seats').textContent = totalSeats;
