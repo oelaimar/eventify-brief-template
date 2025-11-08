@@ -2,6 +2,10 @@ const btnsStepers = document.querySelectorAll(".sidebar__btn");
 const screens = document.querySelectorAll(".screen");
 const headerTitle = document.getElementById("page-title");
 const headerSubTitle = document.getElementById("page-subtitle");
+const form = document.getElementById("event-form");
+const variantRowList = document.getElementById("variants-list");
+const btnAddVariant = document.getElementById("btn-add-variant");
+const formErrors = document.getElementById("form-errors");
 
 // ============================================
 // DATA MANAGEMENT
@@ -33,16 +37,6 @@ const headerTitles = {
 // Your app's data structure
 let events = [];
 let archive = [];
-
-// data to test
-events = [{ name: "Concert", seats: 2, price: 1000 },
-          { name: "Sports", seats: 2, price: 20 }];
-
-archive = [{ name: "serce", seats: 13, price: 20 },
-          { name: "Sports", seats: 14, price: 10 }];
-saveData();
-
-
 
 // Save/load from localStorage
 function loadData() {
@@ -134,28 +128,167 @@ function renderStats() {
 // ADD EVENT FORM
 // ============================================
 
+//image url validation
+function isValidImageUrl(url) {
+    return /^https?:\/\/[^?]+\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?(#.*)?$/i.test(url);
+}
+
+let id = 1;
+
 function handleFormSubmit(e) {
     // TODO:
     // 1. Prevent default
+    e.preventDefault();
     // 2. Validate form inputs
-    // 3. If valid: create new event object, add to events array, save data, reset form
+    const eventTitle = document.getElementById("event-title");
+    const eventImg = document.getElementById("event-image");
+    const eventDescription = document.getElementById("event-description");
+    const eventSeats = document.getElementById("event-seats");
+    const eventPrice = document.getElementById("event-price");
+    const eventVariants = document.querySelectorAll(".variant-row");
+
+    let isValid = true;
+    // 3. If valid: create new event object, add to events array, save data, reset form  
     // 4. If invalid: show errors in #form-errors
+
+    //validation title
+    if (eventTitle.value.trim() === "") {
+
+        formErrors.innerHTML += `<span>the title is empty</br> </span>`;
+
+        isValid = false;
+    }
+
+    //validation image url
+    if (!isValidImageUrl(eventImg.value)) {
+
+        formErrors.innerHTML += `<span>the url is invalid</br> </span>`;
+        isValid = false;
+    }
+
+    //velidation discreption
+    if (eventDescription.value.trim() === "") {
+
+        formErrors.innerHTML += `<span>the Description is empty</br> </span>`;
+        isValid = false;
+    }
+
+    //validation Seats
+    if (Number(eventSeats.value) <= 0) {
+
+        formErrors.innerHTML = `<span>the Seats must be Positive</br> </span>`;
+        isValid = false;
+    }
+
+    //validation Price
+    if (Number(eventPrice.value) <= 0) {
+
+        formErrors.innerHTML = `<span>the price must be Positive</br> </span>`;
+        isValid = false;
+    }
+
+    //validation variant
+    const variants = [];
+    eventVariants.forEach((variant, index) => {
+        const variantsName = document.querySelectorAll(".variant-row__name");
+        const variantQuantity = document.querySelectorAll(".variant-row__qty");
+        const variantsValue = document.querySelectorAll(".variant-row__value");
+        const variantsType = document.querySelectorAll(".variant-row__type");
+
+        if (variantsName.value.trim() === "") {
+            formErrors.innerHTML += `<div>Variant #${index + 1}: Name is required.</div>`;
+            isValid = false;
+        }
+        if (variantQuantity < 0) {
+            formErrors.innerHTML += `<div>Variant #${index + 1}: Quantity must be positive.</div>`;
+            isValid = false;
+        }
+        if (variantsValue < 0) {
+            formErrors.innerHTML += `<div>Variant #${index + 1}: Value must be a valid number.</div>`;
+            isValid = false;
+        }
+        variants.push({ id: index + 1, name: variantsName, qty: variantQuantity, value: variantsValue, type: variantsType });
+    });
+
+    if (!isValid) {
+
+        formErrors.classList.remove("is-hidden");
+        formErrors.classList.remove("alert--success");
+        formErrors.classList.add("alert--error");
+
+        clearTimeout(window.hideErrorTimeout);
+
+        window.hideErrorTimeout = setTimeout(() => {
+            formErrors.innerHTML = "";
+            formErrors.classList.add("is-hidden");
+        }, 4000);
+        return;
+    }
+
+    const newEvent = {
+        id: id++,
+        title: eventTitle.value,
+        image: eventImg.value,
+        description: eventDescription.value.trim(),
+        seats: Number(eventSeats.value),
+        price: Number(eventPrice.value),
+        variants,
+    };
+
+    formErrors.innerHTML = "";
+    formErrors.innerHTML += "Form submitted successfully!";
+    formErrors.classList.remove("is-hidden");
+    formErrors.classList.add("alert--success");
+    formErrors.classList.remove("alert--error");
+
+    clearTimeout(window.hideErrorTimeout);
+
+    window.hideErrorTimeout = setTimeout(() => {
+        formErrors.innerHTML = "";
+        formErrors.classList.add("is-hidden");
+    }, 4000);
+
+    events.push(newEvent)
+    saveData();
+    renderStats();
+    variantRowList.innerHTML = "";
+    form.reset();
 }
 
 // document.getElementById('event-form').addEventListener('submit', handleFormSubmit)
+form.addEventListener('submit', handleFormSubmit)
 
 function addVariantRow() {
     // TODO:
     // 1. Clone .variant-row template
+    const divVariantRow = document.createElement("div");
+    divVariantRow.classList.add("variant-row")
+
+    divVariantRow.innerHTML = `
+    <input type="text" class="input variant-row__name" placeholder="Variant name (e.g., 'Early Bird')" />
+    <input type="number" class="input variant-row__qty" placeholder="Qty" min="1" />
+    <input type="number" class="input variant-row__value" placeholder="Value" step="0.01" />
+    <select class="select variant-row__type">
+        <option value="fixed">Fixed Price</option>
+        <option value="percentage">Percentage Off</option>
+    </select>
+    <button type="button" class="btn btn--danger btn--small variant-row__remove">Remove</button>
+    `;
     // 2. Append to #variants-list
+    variantRowList.appendChild(divVariantRow);
+
     // 3. Add remove listener to new row's remove button
+    const removeVariantRowBtns = divVariantRow.querySelector(".variant-row__remove");
+    removeVariantRowBtns.addEventListener("click", () => removeVariantRow(removeVariantRowBtns));
 }
 
 // document.getElementById('btn-add-variant').addEventListener('click', addVariantRow)
+btnAddVariant.addEventListener('click', addVariantRow);
 
 function removeVariantRow(button) {
     // TODO:
     // Find closest .variant-row and remove it
+    button.closest(".variant-row").remove();
 }
 
 // ============================================
