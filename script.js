@@ -149,30 +149,29 @@ function handleFormSubmit(e) {
 
     let isValid = true;
     // 3. If valid: create new event object, add to events array, save data, reset form  
-    // 4. If invalid: show errors in #form-errors
-
+    
     //validation title
     if (eventTitle.value.trim() === "") {
 
         formErrors.innerHTML += `<span>the title is empty</br> </span>`;
-
+        
         isValid = false;
     }
 
     //validation image url
     if (!isValidImageUrl(eventImg.value)) {
-
+        
         formErrors.innerHTML += `<span>the url is invalid</br> </span>`;
         isValid = false;
     }
-
+    
     //velidation discreption
     if (eventDescription.value.trim() === "") {
-
+        
         formErrors.innerHTML += `<span>the Description is empty</br> </span>`;
         isValid = false;
     }
-
+    
     //validation Seats
     if (Number(eventSeats.value) <= 0) {
 
@@ -195,21 +194,22 @@ function handleFormSubmit(e) {
         const variantsValue = document.querySelectorAll(".variant-row__value");
         const variantsType = document.querySelectorAll(".variant-row__type");
 
-        if (variantsName.value.trim() === "") {
+        if (variantsName[index].value.trim() === "") {
             formErrors.innerHTML += `<div>Variant #${index + 1}: Name is required.</div>`;
             isValid = false;
         }
-        if (variantQuantity < 0) {
+        if (Number(variantQuantity[index].value) < 0 || variantQuantity[index].value === "") {
             formErrors.innerHTML += `<div>Variant #${index + 1}: Quantity must be positive.</div>`;
             isValid = false;
         }
-        if (variantsValue < 0) {
+        if (Number(variantsValue[index].value) < 0 || variantsValue[index].value === "") {
             formErrors.innerHTML += `<div>Variant #${index + 1}: Value must be a valid number.</div>`;
             isValid = false;
         }
         variants.push({ id: index + 1, name: variantsName, qty: variantQuantity, value: variantsValue, type: variantsType });
     });
-
+    
+    // 4. If invalid: show errors in #form-errors
     if (!isValid) {
 
         formErrors.classList.remove("is-hidden");
