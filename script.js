@@ -6,10 +6,13 @@ const form = document.getElementById("event-form");
 const variantRowList = document.getElementById("variants-list");
 const btnAddVariant = document.getElementById("btn-add-variant");
 const formErrors = document.getElementById("form-errors");
+const eventsTable = document.getElementById("events-table");
+const eventsPagination = document.getElementById("events-pagination");
 
 // ============================================
 // DATA MANAGEMENT
 // ============================================
+let id;
 
 //titles and subtitles of the header
 const headerTitles = {
@@ -53,6 +56,11 @@ function loadData() {
         events = [];
         archive = [];
     }
+
+    //get the last id
+    let lastSavedEventsId = events.length > 0 ? Number(events[events.length - 1].id) : 0;;
+    let lasrSavedArchiveId = archive.length > 0 ? Number(archive[archive.length - 1].id) : 0;
+    id = Math.max(lastSavedEventsId, lasrSavedArchiveId) + 1;
 }
 
 function saveData() {
@@ -133,7 +141,6 @@ function isValidImageUrl(url) {
     return /^https?:\/\/[^?]+\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?(#.*)?$/i.test(url);
 }
 
-let id = 1;
 
 function handleFormSubmit(e) {
     // TODO:
@@ -149,29 +156,29 @@ function handleFormSubmit(e) {
 
     let isValid = true;
     // 3. If valid: create new event object, add to events array, save data, reset form  
-    
+
     //validation title
     if (eventTitle.value.trim() === "") {
 
         formErrors.innerHTML += `<span>the title is empty</br> </span>`;
-        
+
         isValid = false;
     }
 
     //validation image url
     if (!isValidImageUrl(eventImg.value)) {
-        
+
         formErrors.innerHTML += `<span>the url is invalid</br> </span>`;
         isValid = false;
     }
-    
+
     //velidation discreption
     if (eventDescription.value.trim() === "") {
-        
+
         formErrors.innerHTML += `<span>the Description is empty</br> </span>`;
         isValid = false;
     }
-    
+
     //validation Seats
     if (Number(eventSeats.value) <= 0) {
 
@@ -206,9 +213,9 @@ function handleFormSubmit(e) {
             formErrors.innerHTML += `<div>Variant #${index + 1}: Value must be a valid number.</div>`;
             isValid = false;
         }
-        variants.push({ id: index + 1, name: variantsName, qty: variantQuantity, value: variantsValue, type: variantsType });
+        variants.push({ id: index + 1, name: variantsName[index].value, qty: variantQuantity[index].value, value: variantsValue[index].value, type: variantsType[index].value });
     });
-    
+
     // 4. If invalid: show errors in #form-errors
     if (!isValid) {
 
@@ -251,6 +258,7 @@ function handleFormSubmit(e) {
     events.push(newEvent)
     saveData();
     renderStats();
+    renderEventsTable(events);
     variantRowList.innerHTML = "";
     form.reset();
 }
@@ -298,19 +306,80 @@ function removeVariantRow(button) {
 function renderEventsTable(eventList, page = 1, perPage = 10) {
     // TODO:
     // 1. Paginate eventList by page and perPage
+    let eventsOnPage = [];
+
+    const firstEventOnPage = (page - 1) * perPage;
+
+    const tbody = eventsTable.querySelector(".table__body");
+
+    if (eventList.length === 0) {
+        tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
+        return;
+    }
     // 2. Generate table rows for each event
+    for (let i = 0; i < perPage; i++) {
+        const event = eventList[i + firstEventOnPage];
+        if (!event) break;
+        eventsOnPage[i] = event;
+    }
     // 3. Add data-event-id to each row
     // 4. Inject into #events-table tbody
+
+    let numberOfEvent = 1 + Number(firstEventOnPage);
+
+    tbody.innerHTML = "";
+    eventsOnPage.forEach((enventOnPage) => tbody.innerHTML +=
+        `<tr class="table__row" data-event-id="${enventOnPage.id}">
+                                    <td>${numberOfEvent++}</td>
+                                    <td><img src="${enventOnPage.image}" alt="${enventOnPage.title}" width="50" /></td>
+                                    <td>${enventOnPage.title}</td>
+                                    <td>${enventOnPage.seats}</td>
+                                    <td>$${enventOnPage.price}</td>
+                                    <td><span class="badge">1</span></td>
+                                    <td>
+                                        <button class="btn btn--small" data-action="details" data-event-id="${enventOnPage.id}">Details</button>
+                                        <button class="btn btn--small" data-action="edit" data-event-id="${enventOnPage.id}">Edit</button>
+                                        <button class="btn btn--danger btn--small" data-action="archive" data-event-id="${enventOnPage.id}">Delete</button>
+                                        </td>
+                                </tr>`
+    )
     // 5. Call renderPagination()
+    renderPagination(eventList.length, page, perPage);
 }
 
 function renderPagination(totalItems, currentPage, perPage) {
     // TODO:
     // Calculate total pages
+    let nuberOfPages = Math.ceil(totalItems / perPage);
     // Generate pagination buttons
+
     // Add .is-active to current page
     // Add .is-disabled to prev/next if at boundary
     // Inject into #events-pagination
+    eventsPagination.innerHTML = "";
+    eventsPagination.innerHTML += `<button class="pagination__btn">← Prev</button>`;
+    for (let i = 1; i <= nuberOfPages; i++) {
+        if (i === currentPage) {
+            eventsPagination.innerHTML += `<button class="pagination__btn is-active">${i}</button>`;
+        } else {
+            eventsPagination.innerHTML += `<button class="pagination__btn">${i}</button>`;
+        }
+    }
+    eventsPagination.innerHTML += `<button class="pagination__btn">Next →</button>`
+    
+    const paginationDetailsBtns = document.querySelectorAll(".pagination__btn");
+
+    if (currentPage === 1) {
+        paginationDetailsBtns[0].classList.add("is-disabled");
+    } else {
+        paginationDetailsBtns[0].classList.remove("is-disabled");
+    }
+    if (currentPage === nuberOfPages) {
+        paginationDetailsBtns[paginationDetailsBtns.length - 1].classList.add("is-disabled");
+    } else {
+        paginationDetailsBtns[paginationDetailsBtns.length - 1].classList.remove("is-disabled");
+    }
+
 }
 
 function handleTableActionClick(e) {
@@ -428,6 +497,7 @@ function init() {
     // 3. Set up all event listeners
     // 4. Call renderStats(), renderEventsTable(), renderArchiveTable()
     renderStats();
+    renderEventsTable(events);
 }
 
 // Call on page load
