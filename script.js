@@ -8,6 +8,7 @@ const btnAddVariant = document.getElementById("btn-add-variant");
 const formErrors = document.getElementById("form-errors");
 const eventsTable = document.getElementById("events-table");
 const eventsPagination = document.getElementById("events-pagination");
+const eventModal = document.getElementById("event-modal");
 
 // ============================================
 // DATA MANAGEMENT
@@ -358,10 +359,10 @@ function renderPagination(totalItems, currentPage, perPage) {
     eventsPagination.innerHTML = "";
     eventsPagination.innerHTML += `<button class="pagination__btn" data-action="prev">← Prev</button>`;
     for (let i = 1; i <= nuberOfPages; i++) {
-        eventsPagination.innerHTML += `<button class="pagination__btn ${(i === currentPage)? 'is-active' : ''}" data-page="${i}">${i}</button>`;
+        eventsPagination.innerHTML += `<button class="pagination__btn ${(i === currentPage) ? 'is-active' : ''}" data-page="${i}">${i}</button>`;
     }
     eventsPagination.innerHTML += `<button class="pagination__btn" data-action="next">Next →</button>`
-    
+
     const paginationDetailsBtns = document.querySelectorAll(".pagination__btn");
 
     if (currentPage === 1) {
@@ -373,34 +374,47 @@ function renderPagination(totalItems, currentPage, perPage) {
 
     eventsPagination.addEventListener("click", (e) => {
         const btn = e.target.closest(".pagination__btn");
-        if(btn.classList.contains("is-disabled")) return;
-
+        if (btn.classList.contains("is-disabled")) return;
         let newPage = currentPage;
 
-        console.log(newPage);
-        
-        if(!isNaN(Number(btn.dataset.page))){
+        if (!isNaN(Number(btn.dataset.page))) {
             newPage = Number(btn.dataset.page);
-        }else if(btn.dataset.action === "prev"){
+        } else if (btn.dataset.action === "prev") {
             newPage--;
-        }else if(btn.dataset.action === "next"){
+        } else if (btn.dataset.action === "next") {
             newPage++;
         }
-        console.log(newPage);
 
-    renderEventsTable(events, newPage);
+        renderEventsTable(events, newPage);
     });
 }
 
 function handleTableActionClick(e) {
     // TODO:
     // 1. Check if e.target is [data-action]
+    const actionBtns = e.target.closest("[data-action]");
+    if (!actionBtns) return;
     // 2. Get action and eventId from attributes
+    const action = actionBtns.dataset.action;
+    const eventId = actionBtns.dataset.eventId;
     // 3. Call appropriate function (showDetails, editEvent, archiveEvent)
+    switch (action) {
+        case "details":
+            showEventDetails(eventId);
+            break;
+        case "edit":
+            editEvent(eventId);
+            break;
+        case "archive":
+            archiveEvent(eventId)
+            console.log("i got clicked archive");
+            break;
+    }
     // Use event delegation on #events-table
 }
 
 // document.getElementById('events-table').addEventListener('click', handleTableActionClick)
+eventsTable.addEventListener('click', handleTableActionClick);
 
 function showEventDetails(eventId) {
     // TODO:
@@ -420,10 +434,23 @@ function editEvent(eventId) {
 function archiveEvent(eventId) {
     // TODO:
     // 1. Find event by id in events
+    let eventById;
+    events.forEach((e) => {
+        if (e.id == eventId) {
+            eventById = e
+        }
+    });
     // 2. Move to archive array
+    archive.push(eventById);
     // 3. Remove from events array
+
+    events = events.filter((event) => event.id != eventId)
+
     // 4. Save data
+    saveData();
     // 5. Re-render table
+    renderStats();
+    renderEventsTable(events);
 }
 
 // ============================================
