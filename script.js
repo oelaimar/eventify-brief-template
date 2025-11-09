@@ -352,34 +352,44 @@ function renderPagination(totalItems, currentPage, perPage) {
     // Calculate total pages
     let nuberOfPages = Math.ceil(totalItems / perPage);
     // Generate pagination buttons
-
     // Add .is-active to current page
     // Add .is-disabled to prev/next if at boundary
     // Inject into #events-pagination
     eventsPagination.innerHTML = "";
-    eventsPagination.innerHTML += `<button class="pagination__btn">← Prev</button>`;
+    eventsPagination.innerHTML += `<button class="pagination__btn" data-action="prev">← Prev</button>`;
     for (let i = 1; i <= nuberOfPages; i++) {
-        if (i === currentPage) {
-            eventsPagination.innerHTML += `<button class="pagination__btn is-active">${i}</button>`;
-        } else {
-            eventsPagination.innerHTML += `<button class="pagination__btn">${i}</button>`;
-        }
+        eventsPagination.innerHTML += `<button class="pagination__btn ${(i === currentPage)? 'is-active' : ''}" data-page="${i}">${i}</button>`;
     }
-    eventsPagination.innerHTML += `<button class="pagination__btn">Next →</button>`
+    eventsPagination.innerHTML += `<button class="pagination__btn" data-action="next">Next →</button>`
     
     const paginationDetailsBtns = document.querySelectorAll(".pagination__btn");
 
     if (currentPage === 1) {
         paginationDetailsBtns[0].classList.add("is-disabled");
-    } else {
-        paginationDetailsBtns[0].classList.remove("is-disabled");
     }
     if (currentPage === nuberOfPages) {
         paginationDetailsBtns[paginationDetailsBtns.length - 1].classList.add("is-disabled");
-    } else {
-        paginationDetailsBtns[paginationDetailsBtns.length - 1].classList.remove("is-disabled");
     }
 
+    eventsPagination.addEventListener("click", (e) => {
+        const btn = e.target.closest(".pagination__btn");
+        if(btn.classList.contains("is-disabled")) return;
+
+        let newPage = currentPage;
+
+        console.log(newPage);
+        
+        if(!isNaN(Number(btn.dataset.page))){
+            newPage = Number(btn.dataset.page);
+        }else if(btn.dataset.action === "prev"){
+            newPage--;
+        }else if(btn.dataset.action === "next"){
+            newPage++;
+        }
+        console.log(newPage);
+
+    renderEventsTable(events, newPage);
+    });
 }
 
 function handleTableActionClick(e) {
