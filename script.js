@@ -10,10 +10,17 @@ const eventsTable = document.getElementById("events-table");
 const eventsPagination = document.getElementById("events-pagination");
 const eventModal = document.getElementById("event-modal");
 const searchEventsInput = document.getElementById("search-events");
+const sortEventsSelection = document.getElementById("sort-events");
 
+const sortEnum = {
+    asc: true,
+    desc: false
+}
 // ============================================
 // DATA MANAGEMENT
 // ============================================
+
+
 let id;
 
 //titles and subtitles of the header
@@ -313,7 +320,9 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
     const firstEventOnPage = (page - 1) * perPage;
 
     const tbody = eventsTable.querySelector(".table__body");
-
+    
+    console.log(eventList.length);
+    
     if (eventList.length === 0) {
         tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
         return;
@@ -503,17 +512,59 @@ function closeModal() {
 function searchEvents(query) {
     // TODO:
     // Filter events by title (case-insensitive)
-    filteredEvents = events.filter((event) => {
+    let filteredEvents = events.filter((event) => {
         return event.title.toLowerCase().includes(query.toLowerCase());
     });
     // Return filtered array
     return filteredEvents;
 }
 
+function bubbleSort(array, sortOrder, key) {
+    let temp;
+    let isSorted;
+    let isThereAkey = key ? `.${key}` : "";
+    let comparisonSymbol = sortOrder ? ">" : "<";
+    for (let i = 0; i < array.length - 1; i++) {
+        isSorted = true;
+        for (let j = 0; j < array.length - 1 - i; j++) {
+            if (eval(`array[j]${isThereAkey} ${comparisonSymbol} array[j + 1]${isThereAkey}`)) {
+                temp = array[j];
+                array[j] = array[j + 1];
+                array[j + 1] = temp;
+                isSorted = false;
+            }
+        }
+        if (isSorted === true) return;
+    }
+}
+
 function sortEvents(eventList, sortType) {
     // TODO:
     // Sort by: title-asc, title-desc, price-asc, price-desc, seats-asc
+    switch (sortType) {
+        case "title-asc":
+            bubbleSort(eventList, sortEnum.asc, "title")
+            break;
+
+        case "title-desc":
+            bubbleSort(eventList, sortEnum.desc, "title")
+            break;
+
+        case "price-asc":
+            bubbleSort(eventList, sortEnum.asc, "price")
+            break;
+
+        case "price-desc":
+            bubbleSort(eventList, sortEnum.desc, "price")
+            break;
+
+        case "seats-asc":
+            bubbleSort(eventList, sortEnum.asc, "seats")
+            break;
+
+    }
     // Return sorted array
+    return eventList;
 }
 
 // Listen to search and sort changes
@@ -530,6 +581,10 @@ searchEventsInput.addEventListener("input", (e) => {
 //     const sorted = sortEvents(events, e.target.value)
 //     renderEventsTable(sorted)
 // })
+sortEventsSelection.addEventListener("change", (e) => {
+    const sorted = sortEvents(events, e.target.value);
+    renderEventsTable(sorted);
+})
 
 // ============================================
 // INITIALIZATION
@@ -544,6 +599,7 @@ function init() {
     // 4. Call renderStats(), renderEventsTable(), renderArchiveTable()
     renderStats();
     renderEventsTable(events);
+    renderArchiveTable(archive);
 }
 
 // Call on page load
