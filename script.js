@@ -9,6 +9,7 @@ const formErrors = document.getElementById("form-errors");
 const eventsTable = document.getElementById("events-table");
 const eventsPagination = document.getElementById("events-pagination");
 const eventModal = document.getElementById("event-modal");
+const searchEventsInput = document.getElementById("search-events");
 
 // ============================================
 // DATA MANAGEMENT
@@ -502,7 +503,11 @@ function closeModal() {
 function searchEvents(query) {
     // TODO:
     // Filter events by title (case-insensitive)
+    filteredEvents = events.filter((event) => {
+        return event.title.toLowerCase().includes(query.toLowerCase());
+    });
     // Return filtered array
+    return filteredEvents;
 }
 
 function sortEvents(eventList, sortType) {
@@ -516,6 +521,10 @@ function sortEvents(eventList, sortType) {
 //     const filtered = searchEvents(e.target.value)
 //     renderEventsTable(filtered)
 // })
+searchEventsInput.addEventListener("input", (e) => {
+    const filtered = searchEvents(e.target.value);
+    renderEventsTable(filtered);
+})
 
 // document.getElementById('sort-events').addEventListener('change', (e) => {
 //     const sorted = sortEvents(events, e.target.value)
