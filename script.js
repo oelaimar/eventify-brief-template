@@ -12,6 +12,7 @@ const eventModal = document.getElementById("event-modal");
 const searchEventsInput = document.getElementById("search-events");
 const sortEventsSelection = document.getElementById("sort-events");
 const modalBody = document.getElementById("modal-body");
+const modalTitle = document.getElementById("modal-title");
 
 const sortEnum = {
     asc: true,
@@ -317,12 +318,9 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
     // TODO:
     // 1. Paginate eventList by page and perPage
     let eventsOnPage = [];
-
+    
     const firstEventOnPage = (page - 1) * perPage;
-
     const tbody = eventsTable.querySelector(".table__body");
-
-    console.log(eventList.length);
 
     if (eventList.length === 0) {
         tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
@@ -418,7 +416,6 @@ function handleTableActionClick(e) {
             break;
         case "archive":
             archiveEvent(eventId)
-            console.log("i got clicked archive");
             break;
     }
     // Use event delegation on #events-table
@@ -437,16 +434,16 @@ function showEventDetails(eventId) {
         }
     });
 
-    console.log(eventById);
+
+    modalTitle.innerHTML = eventById.title;
 
     // 2. Populate #modal-body with event details
-    modalBody.innerHTML = "";
     modalBody.innerHTML = `
         <div>
                     <p><strong>Description:</strong> ${eventById.description}</p>
                     <p><strong>Seats Available:</strong> ${eventById.seats}</p>
-                    <p><strong>Image URL:</strong> <img src="${eventById.url}" alt="${eventById.title}" width="50">Link</img></p>
-    `;
+                    <p><strong>Image URL:</strong> <img src="${eventById.image}" alt="${eventById.title}" width="500"></p>
+    `;   
 
     if (eventById.variants.length !== 0) {
         modalBody.innerHTML += `
