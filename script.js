@@ -11,6 +11,7 @@ const eventsPagination = document.getElementById("events-pagination");
 const eventModal = document.getElementById("event-modal");
 const searchEventsInput = document.getElementById("search-events");
 const sortEventsSelection = document.getElementById("sort-events");
+const modalBody = document.getElementById("modal-body");
 
 const sortEnum = {
     asc: true,
@@ -320,9 +321,9 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
     const firstEventOnPage = (page - 1) * perPage;
 
     const tbody = eventsTable.querySelector(".table__body");
-    
+
     console.log(eventList.length);
-    
+
     if (eventList.length === 0) {
         tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
         return;
@@ -429,8 +430,42 @@ eventsTable.addEventListener('click', handleTableActionClick);
 function showEventDetails(eventId) {
     // TODO:
     // 1. Find event by id in events array
+    let eventById;
+    events.forEach((e) => {
+        if (e.id == eventId) {
+            eventById = e
+        }
+    });
+
+    console.log(eventById);
+
     // 2. Populate #modal-body with event details
+    modalBody.innerHTML = "";
+    modalBody.innerHTML = `
+        <div>
+                    <p><strong>Description:</strong> ${eventById.description}</p>
+                    <p><strong>Seats Available:</strong> ${eventById.seats}</p>
+                    <p><strong>Image URL:</strong> <img src="${eventById.url}" alt="${eventById.title}" width="50">Link</img></p>
+    `;
+
+    if (eventById.variants.length !== 0) {
+        modalBody.innerHTML += `
+        <h4>Variants:</h4>
+        <ul>`
+        eventById.variants.forEach((variant) => {
+            modalBody.innerHTML += `<li style="list-style: none;">
+                                        <strong>${variant.name}</strong>
+                                        (Qty: ${variant.qty}, Discount: ${variant.value} ${variant.type})
+                                     </li>`
+        })
+        modalBody.innerHTML += `</ul>`
+    }
+
+
+    modalBody.innerHTML += `</div>`;
     // 3. Remove .is-hidden from #event-modal
+    eventModal.classList.remove("is-hidden");
+
 }
 
 function editEvent(eventId) {
@@ -496,6 +531,7 @@ function openModal(title, content) {
 function closeModal() {
     // TODO:
     // Add .is-hidden to #event-modal
+    eventModal.classList.add("is-hidden");
 }
 
 // Listen to close button and overlay click
@@ -504,6 +540,11 @@ function closeModal() {
 //         closeModal()
 //     }
 // })
+eventModal.addEventListener('click', (e) => {
+    if (e.target.dataset.action === 'close-modal' || e.target.classList.contains('modal__overlay')) {
+        closeModal()
+    }
+})
 
 // ============================================
 // SEARCH & SORT
