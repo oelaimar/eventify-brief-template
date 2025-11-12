@@ -14,16 +14,30 @@ const sortEventsSelection = document.getElementById("sort-events");
 const modalBody = document.getElementById("modal-body");
 const modalTitle = document.getElementById("modal-title");
 
+//form inputs
+const eventTitle = document.getElementById("event-title");
+const eventImg = document.getElementById("event-image");
+const eventDescription = document.getElementById("event-description");
+const eventSeats = document.getElementById("event-seats");
+const eventPrice = document.getElementById("event-price");
+
 const sortEnum = {
     asc: true,
     desc: false
 }
+
+let id;
+let editMode = false;
+let editEventId = null;
+// Your app's data structure
+
+let events = [];
+let archive = [];
 // ============================================
 // DATA MANAGEMENT
 // ============================================
 
 
-let id;
 
 //titles and subtitles of the header
 const headerTitles = {
@@ -48,9 +62,6 @@ const headerTitles = {
     }
 }
 
-// Your app's data structure
-let events = [];
-let archive = [];
 
 // Save/load from localStorage
 function loadData() {
@@ -69,7 +80,7 @@ function loadData() {
     }
 
     //get the last id
-    let lastSavedEventsId = events.length > 0 ? Number(events[events.length - 1].id) : 0;;
+    let lastSavedEventsId = events.length > 0 ? Number(events[events.length - 1].id) : 0;
     let lasrSavedArchiveId = archive.length > 0 ? Number(archive[archive.length - 1].id) : 0;
     id = Math.max(lastSavedEventsId, lasrSavedArchiveId) + 1;
 }
@@ -155,14 +166,10 @@ function isValidImageUrl(url) {
 
 function handleFormSubmit(e) {
     // TODO:
+    formErrors.innerHTML = "";
     // 1. Prevent default
     e.preventDefault();
     // 2. Validate form inputs
-    const eventTitle = document.getElementById("event-title");
-    const eventImg = document.getElementById("event-image");
-    const eventDescription = document.getElementById("event-description");
-    const eventSeats = document.getElementById("event-seats");
-    const eventPrice = document.getElementById("event-price");
     const eventVariants = document.querySelectorAll(".variant-row");
 
     let isValid = true;
@@ -170,36 +177,30 @@ function handleFormSubmit(e) {
 
     //validation title
     if (eventTitle.value.trim() === "") {
-
         formErrors.innerHTML += `<span>the title is empty</br> </span>`;
-
         isValid = false;
     }
 
     //validation image url
     if (!isValidImageUrl(eventImg.value)) {
-
         formErrors.innerHTML += `<span>the url is invalid</br> </span>`;
         isValid = false;
     }
 
     //velidation discreption
     if (eventDescription.value.trim() === "") {
-
         formErrors.innerHTML += `<span>the Description is empty</br> </span>`;
         isValid = false;
     }
 
     //validation Seats
     if (Number(eventSeats.value) <= 0) {
-
         formErrors.innerHTML = `<span>the Seats must be Positive</br> </span>`;
         isValid = false;
     }
 
     //validation Price
     if (Number(eventPrice.value) <= 0) {
-
         formErrors.innerHTML = `<span>the price must be Positive</br> </span>`;
         isValid = false;
     }
@@ -217,11 +218,11 @@ function handleFormSubmit(e) {
             isValid = false;
         }
         if (Number(variantQuantity[index].value) < 0 || variantQuantity[index].value === "") {
-            formErrors.innerHTML += `<div>Variant #${index + 1}: Quantity must be positive.</div>`;
+            formErrors.innerHTML += `<div>Variant #${index + 1}: invalid quantity.</div>`;
             isValid = false;
         }
         if (Number(variantsValue[index].value) < 0 || variantsValue[index].value === "") {
-            formErrors.innerHTML += `<div>Variant #${index + 1}: Value must be a valid number.</div>`;
+            formErrors.innerHTML += `<div>Variant #${index + 1}: invalid value.</div>`;
             isValid = false;
         }
         variants.push({ id: index + 1, name: variantsName[index].value, qty: variantQuantity[index].value, value: variantsValue[index].value, type: variantsType[index].value });
@@ -230,8 +231,7 @@ function handleFormSubmit(e) {
     // 4. If invalid: show errors in #form-errors
     if (!isValid) {
 
-        formErrors.classList.remove("is-hidden");
-        formErrors.classList.remove("alert--success");
+        formErrors.classList.remove("is-hidden", "alert--success");
         formErrors.classList.add("alert--error");
 
         clearTimeout(window.hideErrorTimeout);
@@ -242,6 +242,57 @@ function handleFormSubmit(e) {
         }, 4000);
         return;
     }
+    //edit mode
+    if (editMode && editEventId !== null) {
+
+        let index;
+        events.forEach((event, i) => {
+            if (event.id === editEventId) {
+                index = i;
+                return;
+            }
+        });
+
+        // Replace the old event
+
+        events[index].id = editEventId,
+        events[index].title = eventTitle.value,
+        events[index].image = eventImg.value,
+        events[index].description = eventDescription.value,
+        events[index].seats = Number(eventSeats.value),
+        events[index].price = Number(eventPrice.value),
+        events[index].variants = variants,
+
+        console.log(events[index].variants);
+        console.log(variants);
+        
+        // Save + re-render
+        saveData();
+        renderStats();
+        renderEventsTable(events);
+
+        // Reset
+        editMode = false;
+        editEventId = null;
+        form.querySelector('button[type="submit"]').textContent = "Add Event";
+        variantRowList.innerHTML = "";
+        form.reset();
+
+        // Show success message
+        formErrors.innerHTML = "Event updated successfully!";
+        formErrors.classList.remove("is-hidden");
+        formErrors.classList.add("alert--success");
+
+        clearTimeout(window.hideErrorTimeout);
+        window.hideErrorTimeout = setTimeout(() => {
+            formErrors.innerHTML = "";
+            formErrors.classList.add("is-hidden");
+        }, 3000);
+
+        //skip new event creation
+        return;
+    }
+
 
     const newEvent = {
         id: id++,
@@ -264,7 +315,7 @@ function handleFormSubmit(e) {
     window.hideErrorTimeout = setTimeout(() => {
         formErrors.innerHTML = "";
         formErrors.classList.add("is-hidden");
-    }, 4000);
+    }, 3000);
 
     events.push(newEvent)
     saveData();
@@ -318,7 +369,7 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
     // TODO:
     // 1. Paginate eventList by page and perPage
     let eventsOnPage = [];
-    
+
     const firstEventOnPage = (page - 1) * perPage;
     const tbody = eventsTable.querySelector(".table__body");
 
@@ -443,7 +494,7 @@ function showEventDetails(eventId) {
                     <p><strong>Description:</strong> ${eventById.description}</p>
                     <p><strong>Seats Available:</strong> ${eventById.seats}</p>
                     <p><strong>Image URL:</strong> <img src="${eventById.image}" alt="${eventById.title}" width="500"></p>
-    `;   
+    `;
 
     if (eventById.variants.length !== 0) {
         modalBody.innerHTML += `
@@ -468,8 +519,46 @@ function showEventDetails(eventId) {
 function editEvent(eventId) {
     // TODO:
     // 1. Find event by id
+    let eventToEdit;
+    events.forEach((event) => {
+        if (event.id == eventId) {
+            eventToEdit = event;
+        }
+    });
+
+    editMode = true;
+    editEventId = eventToEdit.id;
     // 2. Populate form fields with event data
+    eventTitle.value = eventToEdit.title;
+    eventImg.value = eventToEdit.image;
+    eventDescription.value = eventToEdit.description;
+    eventSeats.value = eventToEdit.seats;
+    eventPrice.value = eventToEdit.price;
+
+    variantRowList.innerHTML = "";
+
+    eventToEdit.variants.forEach((variant) => {
+        const divVariantRow = document.createElement("div");
+        divVariantRow.classList.add("variant-row")
+        divVariantRow.innerHTML = `
+            <input type="text" class="input variant-row__name" value="${variant.name}" placeholder="Variant name" />
+            <input type="number" class="input variant-row__qty" value="${variant.qty}" min="1" />
+            <input type="number" class="input variant-row__value" value="${variant.value}" step="0.01" />
+            <select class="select variant-row__type">
+                <option value="fixed" ${variant.type}>Fixed Price</option>
+                <option value="percentage" ${variant.type}>Percentage Off</option>
+            </select>
+            <button type="button" class="btn btn--danger btn--small variant-row__remove">Remove</button>
+        `;
+        variantRowList.appendChild(divVariantRow);
+
+        const removeVariantRowBtns = divVariantRow.querySelector(".variant-row__remove");
+        removeVariantRowBtns.addEventListener("click", () => removeVariantRow(removeVariantRowBtns));
+    });
+
+    form.querySelector('button[type="submit"]').textContent = "Update Event";
     // 3. Switch to 'add' screen
+    switchScreen("add");
     // 4. On submit, update existing event instead of creating new
 }
 
