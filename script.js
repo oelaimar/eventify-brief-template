@@ -13,6 +13,7 @@ const searchEventsInput = document.getElementById("search-events");
 const sortEventsSelection = document.getElementById("sort-events");
 const modalBody = document.getElementById("modal-body");
 const modalTitle = document.getElementById("modal-title");
+const archiveTable = document.getElementById("archive-table");
 
 //form inputs
 const eventTitle = document.getElementById("event-title");
@@ -255,17 +256,14 @@ function handleFormSubmit(e) {
 
         // Replace the old event
 
-        events[index].id = editEventId,
-        events[index].title = eventTitle.value,
-        events[index].image = eventImg.value,
-        events[index].description = eventDescription.value,
-        events[index].seats = Number(eventSeats.value),
-        events[index].price = Number(eventPrice.value),
-        events[index].variants = variants,
+        events[index].id = editEventId;
+        events[index].title = eventTitle.value;
+        events[index].image = eventImg.value;
+        events[index].description = eventDescription.value;
+        events[index].seats = Number(eventSeats.value);
+        events[index].price = Number(eventPrice.value);
+        events[index].variants = variants;
 
-        console.log(events[index].variants);
-        console.log(variants);
-        
         // Save + re-render
         saveData();
         renderStats();
@@ -396,7 +394,7 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
                                     <td>${enventOnPage.title}</td>
                                     <td>${enventOnPage.seats}</td>
                                     <td>$${enventOnPage.price}</td>
-                                    <td><span class="badge">1</span></td>
+                                    <td><span class="badge">${enventOnPage.variants.length}</span></td>
                                     <td>
                                         <button class="btn btn--small" data-action="details" data-event-id="${enventOnPage.id}">Details</button>
                                         <button class="btn btn--small" data-action="edit" data-event-id="${enventOnPage.id}">Edit</button>
@@ -466,14 +464,18 @@ function handleTableActionClick(e) {
             editEvent(eventId);
             break;
         case "archive":
-            archiveEvent(eventId)
+            archiveEvent(eventId);
             break;
+        case "restore":
+            restoreEvent(eventId);
+
     }
     // Use event delegation on #events-table
 }
 
 // document.getElementById('events-table').addEventListener('click', handleTableActionClick)
 eventsTable.addEventListener('click', handleTableActionClick);
+archiveTable.addEventListener('click', handleTableActionClick);
 
 function showEventDetails(eventId) {
     // TODO:
@@ -568,7 +570,8 @@ function archiveEvent(eventId) {
     let eventById;
     events.forEach((e) => {
         if (e.id == eventId) {
-            eventById = e
+            eventById = e;
+            return;
         }
     });
     // 2. Move to archive array
@@ -582,6 +585,7 @@ function archiveEvent(eventId) {
     // 5. Re-render table
     renderStats();
     renderEventsTable(events);
+    renderArchiveTable(archive);
 }
 
 // ============================================
@@ -590,17 +594,65 @@ function archiveEvent(eventId) {
 
 function renderArchiveTable(archivedList) {
     // TODO:
+    // 1. Paginate eventList by page and perPage
+    let archiveOnPage = [];
+
+    const tbody = archiveTable.querySelector(".table__body");
+
+    if (archivedList.length === 0) {
+        tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
+        return;
+    }
+    // 2. Generate table rows for each archive event
+    for (let i = 0; i < archivedList.length; i++) {
+        const archive = archivedList[i];
+        if (!archive) break;
+        archiveOnPage[i] = archive;
+    }
+    // 3. Add data-event-id to each row
+    // 4. Inject into #events-table tbody
+
+    let numberOfArchives = 1;
+
+    tbody.innerHTML = "";
+    archiveOnPage.forEach((archiveOnPage) => tbody.innerHTML +=
+        `<tr class="table__row" data-event-id="${archiveOnPage.id}">
+                                    <td>${numberOfArchives++}</td>
+                                    <td><img src="${archiveOnPage.image}" alt="${archiveOnPage.title}" width="50" /></td>
+                                    <td>${archiveOnPage.title}</td>
+                                    <td>${archiveOnPage.seats}</td>
+                                    <td>$${archiveOnPage.price}</td>
+                                    <td><span class="badge">${archiveOnPage.variants.length}</span></td>
+                                    <td>
+                                        <button class="btn btn--small" data-action="restore" data-event-id="${archiveOnPage.id}">Restore</button>
+                                    </td>
+                                </tr>`
+    )
     // Similar to renderEventsTable but read-only
-    // Show "Restore" button instead of "Edit"/"Delete"
 }
 
 function restoreEvent(eventId) {
     // TODO:
     // 1. Find event by id in archive
+    let archiveById;
+    archive.forEach((e) => {
+        if (e.id == eventId) {
+            archiveById = e;
+            return;
+        }
+    });
     // 2. Move back to events array
+    events.push(archiveById);
     // 3. Remove from archive
+
+    archive = archive.filter((arch) => arch.id != eventId)
+
     // 4. Save data
+    saveData();
     // 5. Re-render both tables
+    renderStats();
+    renderEventsTable(events);
+    renderArchiveTable(archive);
 }
 
 // ============================================
