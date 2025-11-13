@@ -31,14 +31,11 @@ let id;
 let editMode = false;
 let editEventId = null;
 // Your app's data structure
-
 let events = [];
 let archive = [];
 // ============================================
 // DATA MANAGEMENT
 // ============================================
-
-
 
 //titles and subtitles of the header
 const headerTitles = {
@@ -63,15 +60,11 @@ const headerTitles = {
     }
 }
 
-
 // Save/load from localStorage
 function loadData() {
-    // TODO: Load events and archive from localStorage
     const savedEvents = localStorage.getItem("events");
     const savedArchive = localStorage.getItem("archive");
-
     try {
-        // JSON.parse(localStorage.getItem('events'))
         events = savedEvents ? JSON.parse(savedEvents) : [];
         archive = savedArchive ? JSON.parse(savedArchive) : [];
     } catch (error) {
@@ -79,7 +72,6 @@ function loadData() {
         events = [];
         archive = [];
     }
-
     //get the last id
     let lastSavedEventsId = events.length > 0 ? Number(events[events.length - 1].id) : 0;
     let lasrSavedArchiveId = archive.length > 0 ? Number(archive[archive.length - 1].id) : 0;
@@ -87,8 +79,6 @@ function loadData() {
 }
 
 function saveData() {
-    // TODO: Save events and archive to localStorage
-    // localStorage.setItem('events', JSON.stringify(events))
     try {
         localStorage.setItem("events", JSON.stringify(events));
         localStorage.setItem("archive", JSON.stringify(archive));
@@ -102,29 +92,23 @@ function saveData() {
 // ============================================
 
 function switchScreen(screenId) {
-    // TODO:
-    // 1. Remove .is-active from all .sidebar__btn
     for (const btn of btnsStepers) {
         btn.classList.remove("is-active");
-        // 2. Add .is-active to [data-screen="${screenId}"]
+
         if (btn.dataset.screen == `${screenId}`) {
             btn.classList.add("is-active");
         }
     }
-    // 3. Remove .is-visible from all .screen
     for (const screen of screens) {
         screen.classList.remove("is-visible");
-        // 4. Add .is-visible to [data-screen="${screenId}"]
         if (screen.dataset.screen == `${screenId}`) {
             screen.classList.add("is-visible");
         }
     }
-    // 5. Update #page-title and #page-subtitle based on screenId
     headerTitle.textContent = headerTitles[screenId].title;
     headerSubTitle.textContent = headerTitles[screenId].subTitle;
 }
 
-// Listen to sidebar button clicks
 btnsStepers.forEach(btn => {
     btn.addEventListener('click', () => switchScreen(btn.dataset.screen))
 })
@@ -133,19 +117,16 @@ btnsStepers.forEach(btn => {
 // STATISTICS SCREEN
 // ============================================
 
-//turn number to a commas for thousands
 function turnNumberWithCommas(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function renderStats() {
-    // TODO:
-    // Calculate from events array:
+
     const totalEvents = events.length;
     const totalSeats = events.reduce((sum, e) => sum + e.seats, 0);
     const totalPrice = events.reduce((sum, e) => sum + e.price * e.seats, 0);
 
-    // Update DOM:
     try {
         document.getElementById('stat-total-events').textContent = turnNumberWithCommas(totalEvents);
         document.getElementById('stat-total-seats').textContent = turnNumberWithCommas(totalSeats);
@@ -164,17 +145,12 @@ function isValidImageUrl(url) {
     return /^https?:\/\/[^?]+\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?(#.*)?$/i.test(url);
 }
 
-
 function handleFormSubmit(e) {
-    // TODO:
     formErrors.innerHTML = "";
-    // 1. Prevent default
     e.preventDefault();
-    // 2. Validate form inputs
     const eventVariants = document.querySelectorAll(".variant-row");
 
     let isValid = true;
-    // 3. If valid: create new event object, add to events array, save data, reset form  
 
     //validation title
     if (eventTitle.value.trim() === "") {
@@ -229,7 +205,6 @@ function handleFormSubmit(e) {
         variants.push({ id: index + 1, name: variantsName[index].value, qty: variantQuantity[index].value, value: variantsValue[index].value, type: variantsType[index].value });
     });
 
-    // 4. If invalid: show errors in #form-errors
     if (!isValid) {
 
         formErrors.classList.remove("is-hidden", "alert--success");
@@ -245,7 +220,6 @@ function handleFormSubmit(e) {
     }
     //edit mode
     if (editMode && editEventId !== null) {
-
         let index;
         events.forEach((event, i) => {
             if (event.id === editEventId) {
@@ -255,7 +229,6 @@ function handleFormSubmit(e) {
         });
 
         // Replace the old event
-
         events[index].id = editEventId;
         events[index].title = eventTitle.value;
         events[index].image = eventImg.value;
@@ -264,19 +237,19 @@ function handleFormSubmit(e) {
         events[index].price = Number(eventPrice.value);
         events[index].variants = variants;
 
-        // Save + re-render
+        //Save + re-render
         saveData();
         renderStats();
         renderEventsTable(events);
 
-        // Reset
+        //Reset
         editMode = false;
         editEventId = null;
         form.querySelector('button[type="submit"]').textContent = "Add Event";
         variantRowList.innerHTML = "";
         form.reset();
 
-        // Show success message
+        //success message
         formErrors.innerHTML = "Event updated successfully!";
         formErrors.classList.remove("is-hidden");
         formErrors.classList.add("alert--success");
@@ -323,12 +296,10 @@ function handleFormSubmit(e) {
     form.reset();
 }
 
-// document.getElementById('event-form').addEventListener('submit', handleFormSubmit)
 form.addEventListener('submit', handleFormSubmit)
 
 function addVariantRow() {
-    // TODO:
-    // 1. Clone .variant-row template
+
     const divVariantRow = document.createElement("div");
     divVariantRow.classList.add("variant-row")
 
@@ -342,20 +313,16 @@ function addVariantRow() {
     </select>
     <button type="button" class="btn btn--danger btn--small variant-row__remove">Remove</button>
     `;
-    // 2. Append to #variants-list
+
     variantRowList.appendChild(divVariantRow);
 
-    // 3. Add remove listener to new row's remove button
     const removeVariantRowBtns = divVariantRow.querySelector(".variant-row__remove");
     removeVariantRowBtns.addEventListener("click", () => removeVariantRow(removeVariantRowBtns));
 }
 
-// document.getElementById('btn-add-variant').addEventListener('click', addVariantRow)
 btnAddVariant.addEventListener('click', addVariantRow);
 
 function removeVariantRow(button) {
-    // TODO:
-    // Find closest .variant-row and remove it
     button.closest(".variant-row").remove();
 }
 
@@ -364,8 +331,7 @@ function removeVariantRow(button) {
 // ============================================
 
 function renderEventsTable(eventList, page = 1, perPage = 10) {
-    // TODO:
-    // 1. Paginate eventList by page and perPage
+
     let eventsOnPage = [];
 
     const firstEventOnPage = (page - 1) * perPage;
@@ -375,14 +341,12 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
         tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
         return;
     }
-    // 2. Generate table rows for each event
+
     for (let i = 0; i < perPage; i++) {
         const event = eventList[i + firstEventOnPage];
         if (!event) break;
         eventsOnPage[i] = event;
     }
-    // 3. Add data-event-id to each row
-    // 4. Inject into #events-table tbody
 
     let numberOfEvent = 1 + Number(firstEventOnPage);
 
@@ -402,18 +366,13 @@ function renderEventsTable(eventList, page = 1, perPage = 10) {
                                         </td>
                                 </tr>`
     )
-    // 5. Call renderPagination()
     renderPagination(eventList.length, page, perPage);
 }
 
 function renderPagination(totalItems, currentPage, perPage) {
-    // TODO:
-    // Calculate total pages
+
     let nuberOfPages = Math.ceil(totalItems / perPage);
-    // Generate pagination buttons
-    // Add .is-active to current page
-    // Add .is-disabled to prev/next if at boundary
-    // Inject into #events-pagination
+
     eventsPagination.innerHTML = "";
     eventsPagination.innerHTML += `<button class="pagination__btn" data-action="prev">← Prev</button>`;
     for (let i = 1; i <= nuberOfPages; i++) {
@@ -448,14 +407,13 @@ function renderPagination(totalItems, currentPage, perPage) {
 }
 
 function handleTableActionClick(e) {
-    // TODO:
-    // 1. Check if e.target is [data-action]
+
     const actionBtns = e.target.closest("[data-action]");
     if (!actionBtns) return;
-    // 2. Get action and eventId from attributes
+
     const action = actionBtns.dataset.action;
     const eventId = actionBtns.dataset.eventId;
-    // 3. Call appropriate function (showDetails, editEvent, archiveEvent)
+
     switch (action) {
         case "details":
             showEventDetails(eventId);
@@ -470,16 +428,13 @@ function handleTableActionClick(e) {
             restoreEvent(eventId);
 
     }
-    // Use event delegation on #events-table
 }
 
-// document.getElementById('events-table').addEventListener('click', handleTableActionClick)
 eventsTable.addEventListener('click', handleTableActionClick);
 archiveTable.addEventListener('click', handleTableActionClick);
 
 function showEventDetails(eventId) {
-    // TODO:
-    // 1. Find event by id in events array
+
     let eventById;
     events.forEach((e) => {
         if (e.id == eventId) {
@@ -487,10 +442,7 @@ function showEventDetails(eventId) {
         }
     });
 
-
     modalTitle.innerHTML = eventById.title;
-
-    // 2. Populate #modal-body with event details
     modalBody.innerHTML = `
         <div>
                     <p><strong>Description:</strong> ${eventById.description}</p>
@@ -513,14 +465,10 @@ function showEventDetails(eventId) {
 
 
     modalBody.innerHTML += `</div>`;
-    // 3. Remove .is-hidden from #event-modal
     eventModal.classList.remove("is-hidden");
-
 }
 
 function editEvent(eventId) {
-    // TODO:
-    // 1. Find event by id
     let eventToEdit;
     events.forEach((event) => {
         if (event.id == eventId) {
@@ -530,7 +478,7 @@ function editEvent(eventId) {
 
     editMode = true;
     editEventId = eventToEdit.id;
-    // 2. Populate form fields with event data
+
     eventTitle.value = eventToEdit.title;
     eventImg.value = eventToEdit.image;
     eventDescription.value = eventToEdit.description;
@@ -559,14 +507,12 @@ function editEvent(eventId) {
     });
 
     form.querySelector('button[type="submit"]').textContent = "Update Event";
-    // 3. Switch to 'add' screen
+
     switchScreen("add");
-    // 4. On submit, update existing event instead of creating new
 }
 
 function archiveEvent(eventId) {
-    // TODO:
-    // 1. Find event by id in events
+
     let eventById;
     events.forEach((e) => {
         if (e.id == eventId) {
@@ -574,15 +520,11 @@ function archiveEvent(eventId) {
             return;
         }
     });
-    // 2. Move to archive array
     archive.push(eventById);
-    // 3. Remove from events array
 
     events = events.filter((event) => event.id != eventId)
 
-    // 4. Save data
     saveData();
-    // 5. Re-render table
     renderStats();
     renderEventsTable(events);
     renderArchiveTable(archive);
@@ -593,8 +535,7 @@ function archiveEvent(eventId) {
 // ============================================
 
 function renderArchiveTable(archivedList) {
-    // TODO:
-    // 1. Paginate eventList by page and perPage
+
     let archiveOnPage = [];
 
     const tbody = archiveTable.querySelector(".table__body");
@@ -603,14 +544,11 @@ function renderArchiveTable(archivedList) {
         tbody.innerHTML = `<tr><td style="text-align:center;">No events found.</td></tr>`;
         return;
     }
-    // 2. Generate table rows for each archive event
     for (let i = 0; i < archivedList.length; i++) {
         const archive = archivedList[i];
         if (!archive) break;
         archiveOnPage[i] = archive;
     }
-    // 3. Add data-event-id to each row
-    // 4. Inject into #events-table tbody
 
     let numberOfArchives = 1;
 
@@ -628,12 +566,9 @@ function renderArchiveTable(archivedList) {
                                     </td>
                                 </tr>`
     )
-    // Similar to renderEventsTable but read-only
 }
 
 function restoreEvent(eventId) {
-    // TODO:
-    // 1. Find event by id in archive
     let archiveById;
     archive.forEach((e) => {
         if (e.id == eventId) {
@@ -641,15 +576,11 @@ function restoreEvent(eventId) {
             return;
         }
     });
-    // 2. Move back to events array
     events.push(archiveById);
-    // 3. Remove from archive
 
     archive = archive.filter((arch) => arch.id != eventId)
 
-    // 4. Save data
     saveData();
-    // 5. Re-render both tables
     renderStats();
     renderEventsTable(events);
     renderArchiveTable(archive);
@@ -659,25 +590,10 @@ function restoreEvent(eventId) {
 // MODAL
 // ============================================
 
-function openModal(title, content) {
-    // TODO:
-    // 1. Set #modal-title
-    // 2. Set #modal-body content
-    // 3. Remove .is-hidden from #event-modal
-}
-
 function closeModal() {
-    // TODO:
-    // Add .is-hidden to #event-modal
     eventModal.classList.add("is-hidden");
 }
 
-// Listen to close button and overlay click
-// document.getElementById('event-modal').addEventListener('click', (e) => {
-//     if (e.target.dataset.action === 'close-modal' || e.target.classList.contains('modal__overlay')) {
-//         closeModal()
-//     }
-// })
 eventModal.addEventListener('click', (e) => {
     if (e.target.dataset.action === 'close-modal' || e.target.classList.contains('modal__overlay')) {
         closeModal()
@@ -689,12 +605,10 @@ eventModal.addEventListener('click', (e) => {
 // ============================================
 
 function searchEvents(query) {
-    // TODO:
-    // Filter events by title (case-insensitive)
+
     let filteredEvents = events.filter((event) => {
         return event.title.toLowerCase().includes(query.toLowerCase());
     });
-    // Return filtered array
     return filteredEvents;
 }
 
@@ -718,8 +632,6 @@ function bubbleSort(array, sortOrder, key) {
 }
 
 function sortEvents(eventList, sortType) {
-    // TODO:
-    // Sort by: title-asc, title-desc, price-asc, price-desc, seats-asc
     switch (sortType) {
         case "title-asc":
             bubbleSort(eventList, sortEnum.asc, "title")
@@ -742,24 +654,14 @@ function sortEvents(eventList, sortType) {
             break;
 
     }
-    // Return sorted array
     return eventList;
 }
 
-// Listen to search and sort changes
-// document.getElementById('search-events').addEventListener('input', (e) => {
-//     const filtered = searchEvents(e.target.value)
-//     renderEventsTable(filtered)
-// })
 searchEventsInput.addEventListener("input", (e) => {
     const filtered = searchEvents(e.target.value);
     renderEventsTable(filtered);
 })
 
-// document.getElementById('sort-events').addEventListener('change', (e) => {
-//     const sorted = sortEvents(events, e.target.value)
-//     renderEventsTable(sorted)
-// })
 sortEventsSelection.addEventListener("change", (e) => {
     const sorted = sortEvents(events, e.target.value);
     renderEventsTable(sorted);
@@ -770,16 +672,11 @@ sortEventsSelection.addEventListener("change", (e) => {
 // ============================================
 
 function init() {
-    // TODO:
-    // 1. Load data from localStorage
+
     loadData();
-    // 2. Render initial screen (statistics)
-    // 3. Set up all event listeners
-    // 4. Call renderStats(), renderEventsTable(), renderArchiveTable()
     renderStats();
     renderEventsTable(events);
     renderArchiveTable(archive);
 }
 
-// Call on page load
-document.addEventListener('DOMContentLoaded', init)
+document.addEventListener('DOMContentLoaded', init);
